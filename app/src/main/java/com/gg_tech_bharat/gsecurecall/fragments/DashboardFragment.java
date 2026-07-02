@@ -3,6 +3,7 @@ package com.gg_tech_bharat.gsecurecall.fragments;
 import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.os.Bundle;
+import android.widget.Toast;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -73,9 +74,7 @@ public class DashboardFragment extends Fragment {
                 );
             }
             
-            binding.switchMainProtection.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                viewModel.setProtectionEnabled(isChecked);
-            });
+            setupSwitchListener();
         });
 
         // 2. Protected App Count
@@ -100,10 +99,25 @@ public class DashboardFragment extends Fragment {
         });
     }
 
-    private void setupListeners() {
+    private void setupSwitchListener() {
         binding.switchMainProtection.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (isChecked) {
+                Boolean allPermissions = viewModel.getAllPermissionsGranted().getValue();
+                if (allPermissions == null || !allPermissions) {
+                    binding.switchMainProtection.setOnCheckedChangeListener(null);
+                    binding.switchMainProtection.setChecked(false);
+                    Toast.makeText(requireContext(), "Please grant all required permissions first!", Toast.LENGTH_LONG).show();
+                    startActivity(new Intent(requireContext(), PermissionActivity.class));
+                    setupSwitchListener();
+                    return;
+                }
+            }
             viewModel.setProtectionEnabled(isChecked);
         });
+    }
+
+    private void setupListeners() {
+        setupSwitchListener();
 
         binding.btnManageApps.setOnClickListener(v -> {
             startActivity(new Intent(requireContext(), AppSelectionActivity.class));
