@@ -2,11 +2,13 @@ package com.gg_tech_bharat.gsecurecall.services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.KeyguardManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import com.gg_tech_bharat.gsecurecall.helpers.OverlayHelper;
 import com.gg_tech_bharat.gsecurecall.helpers.PreferenceHelper;
 import com.gg_tech_bharat.gsecurecall.utils.Logger;
 
@@ -17,12 +19,52 @@ public class AccessibilityMonitorService extends AccessibilityService {
     private static long lastMinimizeTime = 0;
     private static final long MINIMIZE_COOLDOWN_MS = 8000; // 8 seconds cooldown
 
+    private final BroadcastReceiver unlockReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (Intent.ACTION_USER_PRESENT.equals(intent.getAction())) {
+                String pkg = preferenceHelper.getLastMinimizedPackage();
+                if (pkg != null && !pkg.isEmpty()) {
+                    Logger.d("User unlocked device. Restoring call screen for: " + pkg);
+                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage(pkg);
+                    if (launchIntent != null) {
+                        launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK 
+                                | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT 
+                                | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                        try {
+                            startActivity(launchIntent);
+                        } catch (Exception e) {
+                            Logger.e("Failed to restore call screen on unlock", e);
+                        }
+                    }
+                    preferenceHelper.setLastMinimizedPackage(""); // Clear after restoring
+                }
+            }
+        }
+    };
+
     @Override
     public void onCreate() {
         super.onCreate();
         preferenceHelper = PreferenceHelper.getInstance(this);
-        keyguardManager = (Context.KEYGUARD_SERVICE != null) ? (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE) : null;
+        keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
+        
+        // Register BroadcastReceiver for user present (unlock)
+        IntentFilter filter = new IntentFilter(Intent.ACTION_USER_PRESENT);
+        registerReceiver(unlockReceiver, filter);
+        
         Logger.d("AccessibilityMonitorService Created");
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        try {
+            unregisterReceiver(unlockReceiver);
+        } catch (Exception e) {
+            Logger.w("Failed to unregister receiver: " + e.getMessage());
+        }
+        Logger.d("AccessibilityMonitorService Destroyed");
     }
 
     @Override
@@ -59,24 +101,26 @@ public class AccessibilityMonitorService extends AccessibilityService {
             AccessibilityNodeInfo source = event.getSource();
             if (source != null) {
                 if (isAnswerNode(source)) {
-                    Logger.i("Accessibility: Answer button clicked. Triggering overlay lock.");
+                    Logger.i("Accessibility: Answer button clicked. Minimizing call screen to show default lock.");
                     lastMinimizeTime = now;
-                    preferenceHelper.setLastActivity("Locked answer action for " + packageName);
-                    OverlayHelper.launchLockOverlay(this, packageName, "Incoming Call", false);
+                    preferenceHelper.setLastMinimizedPackage(packageName);
+                    preferenceHelper.setLastActivity("Minimized answer action for " + packageName);
+                    performGlobalAction(GLOBAL_ACTION_HOME);
                 }
                 source.recycle();
             }
         }
 
-        // Scenario B: Window state changed (e.g., they swiped to answer and the call screen became active)
+        // Scenario B: Window state changed (e.g. they swiped to answer and the call screen became active)
         if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if (rootNode != null) {
                 if (isActiveCallState(rootNode)) {
-                    Logger.i("Accessibility: Call is active/connected. Triggering overlay lock.");
+                    Logger.i("Accessibility: Call is active/connected. Minimizing call screen to show default lock.");
                     lastMinimizeTime = now;
-                    preferenceHelper.setLastActivity("Locked active call for " + packageName);
-                    OverlayHelper.launchLockOverlay(this, packageName, "Incoming Call", false);
+                    preferenceHelper.setLastMinimizedPackage(packageName);
+                    preferenceHelper.setLastActivity("Minimized active call for " + packageName);
+                    performGlobalAction(GLOBAL_ACTION_HOME);
                 }
                 rootNode.recycle();
             }

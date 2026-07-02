@@ -138,4 +138,13 @@ public class PreferenceHelper {
     public void setLastActivity(String log) {
         prefs.edit().putString(Constants.KEY_LAST_ACTIVITY, log).apply();
     }
+
+    // Last Minimized Call Package
+    public String getLastMinimizedPackage() {
+        return prefs.getString("last_minimized_package", "");
+    }
+
+    public void setLastMinimizedPackage(String pkgName) {
+        prefs.edit().putString("last_minimized_package", pkgName).apply();
+    }
 }
