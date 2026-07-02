@@ -36,10 +36,9 @@ public class MainViewModel extends AndroidViewModel {
         
         lastActivity.setValue(preferenceHelper.getLastActivity());
         
-        // Verify critical permissions: Accessibility, Notification Listener, and Overlay
+        // Verify critical permissions: Accessibility and Notification Listener
         boolean permCheck = PermissionHelper.isAccessibilityServiceEnabled(getApplication())
-                && PermissionHelper.isNotificationListenerEnabled(getApplication())
-                && PermissionHelper.isOverlayPermissionEnabled(getApplication());
+                && PermissionHelper.isNotificationListenerEnabled(getApplication());
         allPermissionsGranted.setValue(permCheck);
     }
 

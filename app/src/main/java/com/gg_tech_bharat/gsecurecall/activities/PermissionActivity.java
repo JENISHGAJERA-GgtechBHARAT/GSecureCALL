@@ -80,12 +80,7 @@ public class PermissionActivity extends AppCompatActivity {
                 PermissionHelper.isNotificationListenerEnabled(this)
         ));
         
-        list.add(new PermissionItem(
-                Constants.PERM_OVERLAY,
-                "Display Over Other Apps",
-                "Permits showing the full-screen secure lock on top of active call windows.",
-                PermissionHelper.isOverlayPermissionEnabled(this)
-        ));
+
         
         list.add(new PermissionItem(
                 Constants.PERM_FOREGROUND,
@@ -120,9 +115,7 @@ public class PermissionActivity extends AppCompatActivity {
             case Constants.PERM_NOTIFICATION:
                 PermissionHelper.openNotificationListenerSettings(this);
                 break;
-            case Constants.PERM_OVERLAY:
-                PermissionHelper.openOverlaySettings(this);
-                break;
+
             case Constants.PERM_FOREGROUND:
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     ActivityCompat.requestPermissions(this, 
