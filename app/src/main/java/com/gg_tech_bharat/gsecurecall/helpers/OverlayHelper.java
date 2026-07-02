@@ -32,9 +32,9 @@ public class OverlayHelper {
                 | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         
         try {
-            context.startActivity(intent);
+            NotificationHelper.showLockNotification(context, packageName, callerName, isVideo);
         } catch (Exception e) {
-            Logger.e("Failed to launch LockOverlayActivity", e);
+            Logger.e("Failed to show lock notification", e);
         }
     }
 }

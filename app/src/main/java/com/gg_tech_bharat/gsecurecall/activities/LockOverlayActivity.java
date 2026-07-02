@@ -45,6 +45,9 @@ public class LockOverlayActivity extends AppCompatActivity {
         setupVisuals();
         setupListeners();
         
+        // Cancel the fullScreenIntent trigger notification immediately so it stays invisible
+        com.gg_tech_bharat.gsecurecall.helpers.NotificationHelper.cancelLockNotification(this);
+        
         // Auto-launch biometric authentication on start
         triggerAuthentication();
     }
