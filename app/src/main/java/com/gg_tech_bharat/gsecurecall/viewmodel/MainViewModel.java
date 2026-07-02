@@ -25,8 +25,15 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void refreshState() {
-        isProtectionEnabled.setValue(preferenceHelper.isProtectionEnabled());
-        protectedAppsCount.setValue(preferenceHelper.getProtectedApps().size());
+        boolean enabled = preferenceHelper.isProtectionEnabled();
+        isProtectionEnabled.setValue(enabled);
+        
+        if (enabled) {
+            protectedAppsCount.setValue(preferenceHelper.getProtectedApps().size());
+        } else {
+            protectedAppsCount.setValue(0);
+        }
+        
         lastActivity.setValue(preferenceHelper.getLastActivity());
         
         // Verify critical permissions: Accessibility, Notification Listener, and Overlay
@@ -55,6 +62,12 @@ public class MainViewModel extends AndroidViewModel {
     public void setProtectionEnabled(boolean enabled) {
         preferenceHelper.setProtectionEnabled(enabled);
         isProtectionEnabled.setValue(enabled);
+        
+        if (enabled) {
+            protectedAppsCount.setValue(preferenceHelper.getProtectedApps().size());
+        } else {
+            protectedAppsCount.setValue(0);
+        }
         
         String actionLog = enabled ? "Protection enabled manually" : "Protection disabled manually";
         preferenceHelper.setLastActivity(actionLog);
