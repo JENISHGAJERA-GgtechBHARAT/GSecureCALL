@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.gg_tech_bharat.gsecurecall.helpers.OverlayHelper;
 import com.gg_tech_bharat.gsecurecall.helpers.PreferenceHelper;
 import com.gg_tech_bharat.gsecurecall.utils.Logger;
 
@@ -58,10 +59,10 @@ public class AccessibilityMonitorService extends AccessibilityService {
             AccessibilityNodeInfo source = event.getSource();
             if (source != null) {
                 if (isAnswerNode(source)) {
-                    Logger.i("Accessibility: Answer button clicked. Minimizing call screen.");
+                    Logger.i("Accessibility: Answer button clicked. Triggering overlay lock.");
                     lastMinimizeTime = now;
-                    preferenceHelper.setLastActivity("Minimized answer action for " + packageName);
-                    performGlobalAction(GLOBAL_ACTION_HOME);
+                    preferenceHelper.setLastActivity("Locked answer action for " + packageName);
+                    OverlayHelper.launchLockOverlay(this, packageName, "Incoming Call", false);
                 }
                 source.recycle();
             }
@@ -72,10 +73,10 @@ public class AccessibilityMonitorService extends AccessibilityService {
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if (rootNode != null) {
                 if (isActiveCallState(rootNode)) {
-                    Logger.i("Accessibility: Call is active/connected. Minimizing call screen.");
+                    Logger.i("Accessibility: Call is active/connected. Triggering overlay lock.");
                     lastMinimizeTime = now;
-                    preferenceHelper.setLastActivity("Minimized active call for " + packageName);
-                    performGlobalAction(GLOBAL_ACTION_HOME);
+                    preferenceHelper.setLastActivity("Locked active call for " + packageName);
+                    OverlayHelper.launchLockOverlay(this, packageName, "Incoming Call", false);
                 }
                 rootNode.recycle();
             }
