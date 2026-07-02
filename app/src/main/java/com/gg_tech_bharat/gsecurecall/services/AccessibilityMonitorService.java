@@ -138,21 +138,6 @@ public class AccessibilityMonitorService extends AccessibilityService {
                 source.recycle();
             }
         }
-
-        // Scenario B: Window state changed (e.g. they swiped to answer and the call screen became active)
-        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            AccessibilityNodeInfo rootNode = getRootInActiveWindow();
-            if (rootNode != null) {
-                if (isActiveCallState(rootNode)) {
-                    Logger.i("Accessibility: Call is active/connected. Minimizing call screen to show default lock.");
-                    lastMinimizeTime = now;
-                    preferenceHelper.setLastMinimizedPackage(packageName);
-                    preferenceHelper.setLastActivity("Minimized active call for " + packageName);
-                    performGlobalAction(GLOBAL_ACTION_HOME);
-                }
-                rootNode.recycle();
-            }
-        }
     }
 
     private boolean isAnswerNode(AccessibilityNodeInfo node) {
@@ -199,56 +184,6 @@ public class AccessibilityMonitorService extends AccessibilityService {
             }
         }
         
-        return false;
-    }
-
-    private boolean isActiveCallState(AccessibilityNodeInfo node) {
-        if (node == null) return false;
-        
-        boolean hasActiveButtons = hasTextInNodeTree(node, "mute") ||
-                                   hasTextInNodeTree(node, "speaker") ||
-                                   hasTextInNodeTree(node, "keypad") ||
-                                   hasTextInNodeTree(node, "end call") ||
-                                   hasTextInNodeTree(node, "hang up");
-                                   
-        boolean hasIncomingIndications = hasTextInNodeTree(node, "incoming") ||
-                                         hasTextInNodeTree(node, "answer") ||
-                                         hasTextInNodeTree(node, "accept") ||
-                                         hasTextInNodeTree(node, "swipe");
-                                         
-        return hasActiveButtons && !hasIncomingIndications;
-    }
-
-    private boolean hasTextInNodeTree(AccessibilityNodeInfo node, String query) {
-        if (node == null) return false;
-        
-        CharSequence text = node.getText();
-        CharSequence desc = node.getContentDescription();
-        if (text != null && text.toString().toLowerCase().contains(query)) {
-            return true;
-        }
-        if (desc != null && desc.toString().toLowerCase().contains(query)) {
-            return true;
-        }
-        
-        // Check children (flat list check for battery optimization)
-        int childCount = node.getChildCount();
-        for (int i = 0; i < childCount; i++) {
-            AccessibilityNodeInfo child = node.getChild(i);
-            if (child != null) {
-                CharSequence cText = child.getText();
-                CharSequence cDesc = child.getContentDescription();
-                if (cText != null && cText.toString().toLowerCase().contains(query)) {
-                    child.recycle();
-                    return true;
-                }
-                if (cDesc != null && cDesc.toString().toLowerCase().contains(query)) {
-                    child.recycle();
-                    return true;
-                }
-                child.recycle();
-            }
-        }
         return false;
     }
 
