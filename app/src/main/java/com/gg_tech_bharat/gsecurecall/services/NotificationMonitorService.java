@@ -112,9 +112,8 @@ public class NotificationMonitorService extends NotificationListenerService {
         }
 
         if (isCall && shouldLock) {
-            Logger.i("Incoming call detected from: " + packageName + " - Showing overlay");
-            preferenceHelper.setLastActivity("Blocked incoming call from " + callerName + " (" + packageName + ")");
-            OverlayHelper.launchLockOverlay(this, packageName, callerName, isVideo);
+            Logger.i("Incoming call detected from: " + packageName);
+            preferenceHelper.setLastActivity("Incoming call from " + callerName + " (" + packageName + ")");
         }
     }
 
