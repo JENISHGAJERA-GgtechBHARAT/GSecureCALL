@@ -6,7 +6,6 @@ import android.content.Context;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
 
-import com.gg_tech_bharat.gsecurecall.helpers.OverlayHelper;
 import com.gg_tech_bharat.gsecurecall.helpers.PreferenceHelper;
 import com.gg_tech_bharat.gsecurecall.utils.Constants;
 import com.gg_tech_bharat.gsecurecall.utils.Logger;
