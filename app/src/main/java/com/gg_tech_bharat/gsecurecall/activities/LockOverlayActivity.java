@@ -30,10 +30,6 @@ public class LockOverlayActivity extends AppCompatActivity {
     private PreferenceHelper preferenceHelper;
     private KeyguardManager keyguardManager;
     private boolean hasTriggeredAuth = false;
-    private BiometricPrompt activePrompt;
-    private final android.os.Handler timeoutHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-    private Runnable timeoutRunnable;
-    private boolean isUnlocked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,48 +115,20 @@ public class LockOverlayActivity extends AppCompatActivity {
         binding.rootOverlay.setOnClickListener(v -> triggerAuthentication());
     }
 
-    private static final int REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL = 1003;
-
     private void triggerAuthentication() {
         boolean allowCredential = preferenceHelper.isAllowDeviceCredential();
         
-        // Cancel any pending timeout
-        if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
-        }
-        
-        // Define a 2-second timeout runnable to cancel BiometricPrompt and fallback
-        timeoutRunnable = () -> {
-            if (!isUnlocked) {
-                Logger.d("Face lock timeout (2 seconds). Cancelling prompt and forcing full-screen default lock screen.");
-                if (activePrompt != null) {
-                    try {
-                        activePrompt.cancelAuthentication();
-                    } catch (Exception e) {
-                        Logger.e("Error cancelling biometric prompt", e);
-                    }
-                }
-                fallbackConfirmCredentials();
-            }
-        };
-        
-        activePrompt = AuthenticationHelper.authenticate(this, allowCredential, new AuthenticationHelper.AuthCallback() {
+        AuthenticationHelper.authenticate(this, allowCredential, new AuthenticationHelper.AuthCallback() {
             @Override
             public void onSuccess() {
-                isUnlocked = true;
-                if (timeoutRunnable != null) {
-                    timeoutHandler.removeCallbacks(timeoutRunnable);
-                }
                 handleUnlockSuccess();
             }
 
             @Override
             public void onError(int errorCode, String errString) {
                 Logger.w("Overlay auth error: " + errString);
-                // Only fallback if the error is not user cancel/back press
-                if (errorCode != BiometricPrompt.ERROR_USER_CANCELED && errorCode != BiometricPrompt.ERROR_NEGATIVE_BUTTON) {
-                    fallbackDismissKeyguard();
-                }
+                // Fallback to keyguard dismissal so user is never stuck
+                fallbackDismissKeyguard();
             }
 
             @Override
@@ -170,47 +138,6 @@ public class LockOverlayActivity extends AppCompatActivity {
                 }
             }
         });
-        
-        // Start 2-second countdown
-        timeoutHandler.postDelayed(timeoutRunnable, 2000);
-    }
-
-    private void fallbackConfirmCredentials() {
-        if (keyguardManager != null) {
-            Intent intent = keyguardManager.createConfirmDeviceCredentialIntent(
-                    "Unlock to Answer",
-                    "Verify screen lock to answer call"
-            );
-            if (intent != null) {
-                try {
-                    startActivityForResult(intent, REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL);
-                } catch (Exception e) {
-                    Logger.e("Failed to launch confirm credential intent", e);
-                    fallbackDismissKeyguard();
-                }
-            } else {
-                fallbackDismissKeyguard();
-            }
-        } else {
-            handleUnlockSuccess();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == REQUEST_CODE_CONFIRM_DEVICE_CREDENTIAL) {
-            if (resultCode == RESULT_OK) {
-                isUnlocked = true;
-                Logger.d("Confirm Device Credential Succeeded");
-                handleUnlockSuccess();
-            } else {
-                Logger.d("Confirm Device Credential Failed/Cancelled");
-                if (preferenceHelper.isHapticFeedback()) {
-                    binding.rootOverlay.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
-                }
-            }
-        }
     }
 
     private void fallbackDismissKeyguard() {
@@ -272,9 +199,6 @@ public class LockOverlayActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (timeoutRunnable != null) {
-            timeoutHandler.removeCallbacks(timeoutRunnable);
-        }
         Animations.stopPulseAnimation(binding.viewPulseCircle);
     }
 }
