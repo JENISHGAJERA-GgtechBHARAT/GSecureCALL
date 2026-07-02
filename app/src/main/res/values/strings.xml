@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GSecureCALL</string>
+    <string name="accessibility_service_label">GSecureCALL Call Protection</string>
+    <string name="accessibility_service_description">Monitors when communication call screens are displayed on your locked device to prompt biometric verification before allowing access.</string>
+</resources>
