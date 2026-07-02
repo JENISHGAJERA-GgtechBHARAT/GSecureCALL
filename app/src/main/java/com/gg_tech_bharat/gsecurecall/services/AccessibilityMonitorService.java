@@ -62,9 +62,25 @@ public class AccessibilityMonitorService extends AccessibilityService {
                 rootNode.recycle();
             }
 
-            Logger.i("Accessibility detected call window. Launching overlay.");
-            preferenceHelper.setLastActivity("Blocked call window on " + packageName);
-            OverlayHelper.launchLockOverlay(this, packageName, callerName, isVideo);
+            // Apply User Preferences (Video Call vs. Voice Call locks)
+            String requireLockFor = preferenceHelper.getRequireUnlockCallType(); // "voice", "video", "both"
+            boolean shouldLock = false;
+
+            if ("both".equals(requireLockFor)) {
+                shouldLock = true;
+            } else if ("voice".equals(requireLockFor) && !isVideo) {
+                shouldLock = true;
+            } else if ("video".equals(requireLockFor) && isVideo) {
+                shouldLock = true;
+            }
+
+            if (shouldLock) {
+                Logger.i("Accessibility detected call window. Launching overlay.");
+                preferenceHelper.setLastActivity("Blocked call window on " + packageName);
+                OverlayHelper.launchLockOverlay(this, packageName, callerName, isVideo);
+            } else {
+                Logger.d("Accessibility skipped lock based on type preference: " + requireLockFor + ", isVideo: " + isVideo);
+            }
         }
     }
 

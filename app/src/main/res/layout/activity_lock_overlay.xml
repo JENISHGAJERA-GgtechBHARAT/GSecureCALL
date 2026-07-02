@@ -5,7 +5,7 @@
     android:id="@+id/root_overlay"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#DD000000"
+    android:background="@android:color/transparent"
     android:fitsSystemWindows="true">
 
     <!-- Glassmorphic Container Card -->
@@ -15,6 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_marginHorizontal="32dp"
+        android:visibility="gone"
         app:cardCornerRadius="32dp"
         app:cardElevation="8dp"
         app:strokeWidth="1dp"
@@ -109,6 +110,7 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="48dp"
         android:orientation="vertical"
+        android:visibility="gone"
         android:gravity="center">
 
         <com.google.android.material.button.MaterialButton

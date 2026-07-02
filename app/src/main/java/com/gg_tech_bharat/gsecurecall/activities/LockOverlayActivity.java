@@ -92,22 +92,11 @@ public class LockOverlayActivity extends AppCompatActivity {
     }
 
     private void setupVisuals() {
-        // Create circle shape for pulse background
-        GradientDrawable pulseShape = new GradientDrawable();
-        pulseShape.setShape(GradientDrawable.OVAL);
-        pulseShape.setColor(0x22FFFFFF);
-        binding.viewPulseCircle.setBackground(pulseShape);
-
-        // Slide up animation on the card
-        Animations.slideUp(binding.cardCallerInfo, 600);
-        
-        // Start pulse animation on the ripple container
-        Animations.startPulseAnimation(binding.viewPulseCircle);
+        // Overlay is now fully transparent and visual cards are hidden.
     }
 
     private void setupListeners() {
-        binding.btnUnlock.setOnClickListener(v -> triggerAuthentication());
-        binding.layoutRipple.setOnClickListener(v -> triggerAuthentication());
+        binding.rootOverlay.setOnClickListener(v -> triggerAuthentication());
     }
 
     private void triggerAuthentication() {
