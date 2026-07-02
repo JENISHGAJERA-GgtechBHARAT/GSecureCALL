@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.gg_tech_bharat.gsecurecall.databinding.ActivityLockOverlayBinding;
 import com.gg_tech_bharat.gsecurecall.helpers.AuthenticationHelper;
 import com.gg_tech_bharat.gsecurecall.helpers.PreferenceHelper;
+import android.app.KeyguardManager;
 import com.gg_tech_bharat.gsecurecall.utils.Animations;
 import com.gg_tech_bharat.gsecurecall.utils.Constants;
 import com.gg_tech_bharat.gsecurecall.utils.Logger;
@@ -25,6 +26,7 @@ public class LockOverlayActivity extends AppCompatActivity {
 
     private ActivityLockOverlayBinding binding;
     private PreferenceHelper preferenceHelper;
+    private KeyguardManager keyguardManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,6 +39,7 @@ public class LockOverlayActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         preferenceHelper = PreferenceHelper.getInstance(this);
+        keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
 
         setupCallerDetails();
         setupVisuals();
@@ -100,27 +103,34 @@ public class LockOverlayActivity extends AppCompatActivity {
     }
 
     private void triggerAuthentication() {
-        boolean allowCredential = preferenceHelper.isAllowDeviceCredential();
-        
-        AuthenticationHelper.authenticate(this, allowCredential, new AuthenticationHelper.AuthCallback() {
-            @Override
-            public void onSuccess() {
-                handleUnlockSuccess();
-            }
-
-            @Override
-            public void onError(int errorCode, String errString) {
-                Logger.w("Overlay auth error: " + errString);
-            }
-
-            @Override
-            public void onFailed() {
-                // Haptic feedback on fail
-                if (preferenceHelper.isHapticFeedback()) {
-                    binding.rootOverlay.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            keyguardManager.requestDismissKeyguard(this, new KeyguardManager.KeyguardDismissCallback() {
+                @Override
+                public void onDismissSucceeded() {
+                    super.onDismissSucceeded();
+                    Logger.d("System lock screen dismissed successfully");
+                    handleUnlockSuccess();
                 }
-            }
-        });
+
+                @Override
+                public void onDismissCancelled() {
+                    super.onDismissCancelled();
+                    Logger.d("System lock screen dismiss cancelled");
+                    if (preferenceHelper.isHapticFeedback()) {
+                        binding.rootOverlay.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                    }
+                }
+
+                @Override
+                public void onDismissError() {
+                    super.onDismissError();
+                    Logger.e("System lock screen dismiss error");
+                }
+            });
+        } else {
+            // Fallback for older APIs (always supported since min SDK is 29)
+            handleUnlockSuccess();
+        }
     }
 
     private void handleUnlockSuccess() {
