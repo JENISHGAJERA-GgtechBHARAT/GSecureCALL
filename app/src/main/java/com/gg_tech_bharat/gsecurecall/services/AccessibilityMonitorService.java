@@ -1,6 +1,7 @@
 package com.gg_tech_bharat.gsecurecall.services;
 
 import android.accessibilityservice.AccessibilityService;
+import android.accessibilityservice.AccessibilityServiceInfo;
 import android.app.ActivityManager;
 import android.app.KeyguardManager;
 import android.content.BroadcastReceiver;
@@ -21,6 +22,11 @@ public class AccessibilityMonitorService extends AccessibilityService {
     private KeyguardManager keyguardManager;
     private static long lastMinimizeTime = 0;
     private static final long MINIMIZE_COOLDOWN_MS = 8000; // 8 seconds cooldown
+
+    private static AccessibilityMonitorService instance;
+    public static AccessibilityMonitorService getInstance() {
+        return instance;
+    }
 
     private final BroadcastReceiver unlockReceiver = new BroadcastReceiver() {
         @Override
@@ -74,6 +80,7 @@ public class AccessibilityMonitorService extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
+        instance = this;
         preferenceHelper = PreferenceHelper.getInstance(this);
         keyguardManager = (KeyguardManager) getSystemService(Context.KEYGUARD_SERVICE);
         
@@ -87,6 +94,7 @@ public class AccessibilityMonitorService extends AccessibilityService {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        instance = null;
         try {
             unregisterReceiver(unlockReceiver);
         } catch (Exception e) {
@@ -200,6 +208,25 @@ public class AccessibilityMonitorService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        updateAccessibilityServiceInfo();
         Logger.d("Accessibility service connected");
+    }
+
+    public void updateAccessibilityServiceInfo() {
+        AccessibilityServiceInfo info = getServiceInfo();
+        if (info == null) {
+            info = new AccessibilityServiceInfo();
+        }
+        
+        java.util.Set<String> protectedApps = preferenceHelper.getProtectedApps();
+        if (protectedApps != null && !protectedApps.isEmpty()) {
+            info.packageNames = protectedApps.toArray(new String[0]);
+        } else {
+            // Monitor a dummy package so we don't scan everything (including Paytm)
+            info.packageNames = new String[]{"com.gg_tech_bharat.gsecurecall.dummy"};
+        }
+        
+        setServiceInfo(info);
+        Logger.d("Updated AccessibilityService package filter to: " + java.util.Arrays.toString(info.packageNames));
     }
 }

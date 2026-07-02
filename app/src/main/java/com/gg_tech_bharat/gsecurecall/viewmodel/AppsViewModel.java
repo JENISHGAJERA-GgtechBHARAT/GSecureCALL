@@ -13,6 +13,7 @@ import androidx.lifecycle.MutableLiveData;
 
 import com.gg_tech_bharat.gsecurecall.helpers.PreferenceHelper;
 import com.gg_tech_bharat.gsecurecall.models.ProtectedApplication;
+import com.gg_tech_bharat.gsecurecall.services.AccessibilityMonitorService;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -139,6 +140,11 @@ public class AppsViewModel extends AndroidViewModel {
         
         String lastAct = (isProtected ? "Protected " : "Unprotected ") + app.getAppName();
         preferenceHelper.setLastActivity(lastAct);
+
+        AccessibilityMonitorService service = AccessibilityMonitorService.getInstance();
+        if (service != null) {
+            service.updateAccessibilityServiceInfo();
+        }
     }
 
     @Override
