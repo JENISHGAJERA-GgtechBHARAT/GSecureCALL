@@ -58,9 +58,8 @@ public class AccessibilityMonitorService extends AccessibilityService {
             }
         }
 
-        // Scenario B: Window content or state changed, check if call transitioned to active/ongoing
-        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED || 
-            eventType == AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED) {
+        // Scenario B: Window state changed, check if call transitioned to active/ongoing
+        if (eventType == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             
             AccessibilityNodeInfo rootNode = getRootInActiveWindow();
             if (rootNode != null) {
