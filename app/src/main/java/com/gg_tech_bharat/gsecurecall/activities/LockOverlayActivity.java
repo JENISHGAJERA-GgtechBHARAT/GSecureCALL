@@ -114,19 +114,42 @@ public class LockOverlayActivity extends AppCompatActivity {
     }
 
     private void triggerAuthentication() {
+        boolean allowCredential = preferenceHelper.isAllowDeviceCredential();
+        
+        AuthenticationHelper.authenticate(this, allowCredential, new AuthenticationHelper.AuthCallback() {
+            @Override
+            public void onSuccess() {
+                handleUnlockSuccess();
+            }
+
+            @Override
+            public void onError(int errorCode, String errString) {
+                Logger.w("Overlay auth error: " + errString);
+                // Fallback to keyguard dismissal so user is never stuck
+                fallbackDismissKeyguard();
+            }
+
+            @Override
+            public void onFailed() {
+                if (preferenceHelper.isHapticFeedback()) {
+                    binding.rootOverlay.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                }
+            }
+        });
+    }
+
+    private void fallbackDismissKeyguard() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             keyguardManager.requestDismissKeyguard(this, new KeyguardManager.KeyguardDismissCallback() {
                 @Override
                 public void onDismissSucceeded() {
                     super.onDismissSucceeded();
-                    Logger.d("System lock screen dismissed successfully");
                     handleUnlockSuccess();
                 }
 
                 @Override
                 public void onDismissCancelled() {
                     super.onDismissCancelled();
-                    Logger.d("System lock screen dismiss cancelled");
                     if (preferenceHelper.isHapticFeedback()) {
                         binding.rootOverlay.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
                     }
@@ -135,11 +158,10 @@ public class LockOverlayActivity extends AppCompatActivity {
                 @Override
                 public void onDismissError() {
                     super.onDismissError();
-                    Logger.e("System lock screen dismiss error");
+                    Logger.e("System dismiss keyguard error");
                 }
             });
         } else {
-            // Fallback for older APIs (always supported since min SDK is 29)
             handleUnlockSuccess();
         }
     }

@@ -44,19 +44,22 @@ public class AuthenticationHelper {
         });
 
         BiometricPrompt.PromptInfo.Builder promptBuilder = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Unlock GSecureCALL")
-                .setSubtitle("Authenticate to answer incoming call")
+                .setTitle("Unlock to Answer")
+                .setSubtitle("Verify lock to answer call")
                 .setConfirmationRequired(false);
 
         if (allowDeviceCredential) {
             // If device credential fallback is allowed, do NOT set negative button text
             // as required by Android BiometricPrompt API.
             int authenticators = androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                    | androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
                     | androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL;
             promptBuilder.setAllowedAuthenticators(authenticators);
         } else {
             // Biometric only requires negative button text
-            promptBuilder.setAllowedAuthenticators(androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG);
+            int authenticators = androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+                    | androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK;
+            promptBuilder.setAllowedAuthenticators(authenticators);
             promptBuilder.setNegativeButtonText("Cancel");
         }
 
