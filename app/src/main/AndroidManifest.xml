@@ -49,6 +49,16 @@
 
 
 
+        <!-- Lock Screen Overlay Activity -->
+        <activity
+            android:name=".activities.LockOverlayActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.GSecureCALL.Overlay" />
+
         <!-- Services -->
         <service
             android:name=".services.ForegroundProtectionService"
