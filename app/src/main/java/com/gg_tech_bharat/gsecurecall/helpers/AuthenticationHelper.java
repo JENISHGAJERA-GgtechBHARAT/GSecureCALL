@@ -17,7 +17,7 @@ public class AuthenticationHelper {
         void onFailed();
     }
 
-    public static void authenticate(@NonNull FragmentActivity activity, boolean allowDeviceCredential, @NonNull AuthCallback callback) {
+    public static BiometricPrompt authenticate(@NonNull FragmentActivity activity, boolean allowDeviceCredential, @NonNull AuthCallback callback) {
         Executor executor = ContextCompat.getMainExecutor(activity);
         
         BiometricPrompt biometricPrompt = new BiometricPrompt(activity, executor, new BiometricPrompt.AuthenticationCallback() {
@@ -69,5 +69,6 @@ public class AuthenticationHelper {
             Logger.e("Failed to launch BiometricPrompt", e);
             callback.onError(-1, e.getMessage());
         }
+        return biometricPrompt;
     }
 }
