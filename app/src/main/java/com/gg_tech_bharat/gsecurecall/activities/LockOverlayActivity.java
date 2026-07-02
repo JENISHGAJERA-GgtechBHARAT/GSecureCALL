@@ -27,6 +27,7 @@ public class LockOverlayActivity extends AppCompatActivity {
     private ActivityLockOverlayBinding binding;
     private PreferenceHelper preferenceHelper;
     private KeyguardManager keyguardManager;
+    private boolean hasTriggeredAuth = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +48,16 @@ public class LockOverlayActivity extends AppCompatActivity {
         
         // Cancel the fullScreenIntent trigger notification immediately so it stays invisible
         com.gg_tech_bharat.gsecurecall.helpers.NotificationHelper.cancelLockNotification(this);
-        
-        // Auto-launch biometric authentication on start
-        triggerAuthentication();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && !hasTriggeredAuth) {
+            hasTriggeredAuth = true;
+            // Delay slightly to let the window settle
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::triggerAuthentication, 200);
+        }
     }
 
     private void configureLockScreenFlags() {
