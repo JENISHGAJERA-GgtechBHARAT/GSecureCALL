@@ -35,7 +35,7 @@ public class AccessibilityMonitorService extends AccessibilityService {
                     
                     if (am != null) {
                         try {
-                            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(100);
+                            List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(10);
                             for (ActivityManager.RunningTaskInfo taskInfo : tasks) {
                                 if (taskInfo.baseActivity != null && taskInfo.baseActivity.getPackageName().equals(pkg)) {
                                     am.moveTaskToFront(taskInfo.id, 0);
@@ -134,11 +134,11 @@ public class AccessibilityMonitorService extends AccessibilityService {
                     preferenceHelper.setLastMinimizedPackage(packageName);
                     preferenceHelper.setLastActivity("Minimized answer action for " + packageName);
                     
-                    // Allow 150ms delay for the app to register click and transition call state
+                    // Allow 100ms delay for the app to register click and transition call state
                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                         Logger.i("Accessibility: Minimizing call to show default lock screen.");
                         performGlobalAction(GLOBAL_ACTION_HOME);
-                    }, 150);
+                    }, 100);
                 }
                 source.recycle();
             }
