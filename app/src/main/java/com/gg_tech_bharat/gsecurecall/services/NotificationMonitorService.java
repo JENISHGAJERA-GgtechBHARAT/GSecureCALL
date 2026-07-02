@@ -111,13 +111,28 @@ public class NotificationMonitorService extends NotificationListenerService {
             shouldLock = true;
         }
 
-        if (isCall && shouldLock) {
-            Logger.i("Incoming call detected from: " + packageName + " - Showing overlay");
-            
-            // Log to preferences last activity
-            preferenceHelper.setLastActivity("Blocked incoming call from " + callerName + " (" + packageName + ")");
-            
-            // Launch overlay
+        boolean isOngoingActiveCall = false;
+        if ((notification.flags & Notification.FLAG_ONGOING_EVENT) != 0) {
+            boolean hasAnswerAction = false;
+            if (notification.actions != null) {
+                for (Notification.Action action : notification.actions) {
+                    if (action.title != null) {
+                        String title = action.title.toString().toLowerCase();
+                        if (title.contains("answer") || title.contains("accept") || title.contains("pick up") || title.contains("join")) {
+                            hasAnswerAction = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (!hasAnswerAction && isCall) {
+                isOngoingActiveCall = true;
+            }
+        }
+
+        if (isOngoingActiveCall && shouldLock) {
+            Logger.i("Ongoing/answered call detected from: " + packageName + " - Showing overlay");
+            preferenceHelper.setLastActivity("Blocked active call from " + callerName + " (" + packageName + ")");
             OverlayHelper.launchLockOverlay(this, packageName, callerName, isVideo);
         }
     }
